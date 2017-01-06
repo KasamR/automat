@@ -2,16 +2,35 @@
 #include<string>
 #include<vector>
 #include<fstream>
+#define NO_MONEY -1
+#define NOT_FOUND -2
 using namespace std;
 
-//商品リストを読み込むための関数
-vector<pair<int, string>> read(vector<pair<int, string>> v) {
+class Drink {
+private:
+	string name = "";
+	int money = 0;
+
+public:
+	Drink(int m, string n);
+	string getName() { return name; }
+	int getMoney() { return money; }
+};
+
+Drink::Drink(int m, string n) {
+	money = m;
+	name = n;
+}
+
+
+vector<Drink> read() {
 	ifstream ifs("items.csv");
 	int i = 0;
 	string str = "";
+	vector<Drink> v;
 	while (ifs >> i) {
 		ifs >> str;
-		v.push_back(pair<int, string>(i,str));
+		v.push_back(Drink(i, str));
 	}
 	return v;
 }
@@ -26,21 +45,21 @@ bool MoneyCheck(int money) {
 }
 
 //買おうとしたときの確認をする関数
-int BuyCheck(vector<pair<int, string>> items, int sum, string input) {
+int BuyCheck(vector<Drink> items, int sum, string input) {
 	for (int i = 0; i < items.size(); i++) {
-		if (items[i].second == input && 0 <= sum - items[i].first) { //ちゃんと買えた時(リストの何番目かを返す)
+		if (items[i].getName() == input && 0 <= sum - items[i].getMoney()) { //ちゃんと買えた時(リストの何番目かを返す)
 			return i;
 		}
-		if (items[i].second == input && sum - items[i].first < 0) { //お金が足りないとき
-			return -1;
+		if (items[i].getName() == input && sum - items[i].getMoney() < 0) { //お金が足りないとき
+			return NO_MONEY;
 		}
 	}
-	return -2; //リストに名前がない
+	return NOT_FOUND; //リストに名前がない
 }
 
 int main() {
 	string input;
-	vector<pair<int, string>> items = read(items);
+	vector<Drink> items = read();
 	int temp = 0; //string to int するための変数
 	int sum = 0; //入力された合計金額を保存するための変数
 	bool loop = true; //ループ制御用の変数
@@ -48,7 +67,7 @@ int main() {
 	do {
 		cout << "**商品リストです**" << endl;
 		for (int i = 0; i < items.size(); i++) {
-			cout << items[i].first << "円: " << items[i].second << endl;
+			cout << items[i].getMoney() << "円: " << items[i].getName() << endl;
 		}
 		cout << "投入金額: " << sum << "円" << endl;
 		cout << "お金を入れるか，欲しい商品を入力してください(終了は\"f\"): ";
@@ -63,15 +82,15 @@ int main() {
 			else {
 				int bc = BuyCheck(items, sum, input); //確認用の関数の使用
 				switch (bc) { //購入できる場合だったかを判断する
-				case -1:
+				case NO_MONEY:
 					cout << "お金が足りません！" << endl;
 					break;
-				case -2:
+				case NOT_FOUND:
 					cout << "リストにないものを買おうとしてます" << endl;
 					break;
 				default:
-					cout << "ゴトン！" << items[bc].second << "を購入しました！" << endl;
-					sum = sum - items[bc].first; //残金の計算
+					cout << "ゴトン！" << items[bc].getName() << "を購入しました！" << endl;
+					sum = sum - items[bc].getMoney(); //残金の計算
 					break;
 				}
 			}
